@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: vet-ai-manager
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -e .
+    preDeployCommand: alembic upgrade head && python scripts/seed.py
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: QUEUE_ENABLED
+        value: "false"
+      - key: SITE_CORS_ORIGINS
+        value: "*"
+      - key: DEFAULT_BUSINESS_ID
+        value: "1"
+      - key: WEBHOOK_RATE_LIMIT_PER_MINUTE
+        value: "120"
+      - key: BACKUP_DIR
+        value: /tmp/backups
+      - key: BACKUP_RETENTION_DAYS
+        value: "14"
+      - key: BUSINESS_TIMEZONE
+        value: Europe/Moscow
+      - key: TELEGRAM_CLIENT_BOT_USERNAME
+        value: denisclinik_bot
+      - key: TELEGRAM_DOCTOR_BOT_USERNAME
+        value: Denis_Notification_klinila_bot
+      - key: DATABASE_URL
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: ADMIN_API_KEY
+        generateValue: true
+      - key: TELEGRAM_CLIENT_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_DOCTOR_BOT_TOKEN
+        sync: false
+      - key: DOCTOR_TELEGRAM_USER_ID
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
