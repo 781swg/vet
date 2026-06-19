@@ -56,9 +56,8 @@
 @media(max-width:1040px){.heroCollage{grid-template-columns:1fr 1fr;grid-template-rows:260px 180px 180px}.heroCollageMain{grid-row:auto;grid-column:1/3}.heroTileWide{grid-column:1/3}.telegramBadge{left:24px;bottom:24px}.aboutVisual{position:relative;top:auto}}
 @media(max-width:640px){.brand img{width:48px;height:48px}.heroCollage{grid-template-columns:1fr;grid-template-rows:230px 160px 160px 160px;gap:10px;padding:10px;border-radius:30px}.heroCollageMain,.heroTileWide{grid-column:auto}.heroCollageMain,.heroTile{border-radius:22px}.telegramBadge{position:relative;left:auto;bottom:auto;justify-content:center;margin-top:2px}.quotePhoto{position:static;margin-top:14px;width:auto}.quotePhoto img{height:220px}}
 
-.heroGrid{position:relative}
-.heroBrandMark{position:absolute;top:36px;right:292px;width:184px;height:184px;object-fit:contain;border-radius:50%;background:#fff;box-shadow:0 18px 52px rgba(0,0,0,.12);padding:8px}
-.heroSide{padding-top:42px}
+.heroSide{padding:28px}
+.heroSide .avatar{width:128px;height:128px;display:block;margin:0 auto 20px;padding:5px;object-fit:contain;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,.1)}
 .trustSection{background:#11a7a5;color:#fff;padding:92px 0}
 .trustTitle{color:#fff;text-align:left;margin-bottom:36px}
 .trustTitle span{color:#fff0ad}
@@ -67,5 +66,5 @@
 .trustSteps time{color:#fff0ad;font-size:27px;font-weight:950;letter-spacing:0;margin-bottom:28px}
 .trustSteps h3{font-size:20px;letter-spacing:0;margin:0 0 9px}
 .trustSteps p{font-size:14px;line-height:1.4;margin:0;color:rgba(255,255,255,.9)}
-@media(max-width:1040px){.heroBrandMark{position:static;width:136px;height:136px;grid-column:1;margin:0 auto}.trustSteps{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.heroBrandMark{width:116px;height:116px}.trustSection{padding:62px 0}.trustSteps{grid-template-columns:1fr}.trustSteps li{min-height:0}.trustSteps time{margin-bottom:16px}}
+@media(max-width:1040px){.trustSteps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.heroSide .avatar{width:108px;height:108px}.trustSection{padding:62px 0}.trustSteps{grid-template-columns:1fr}.trustSteps li{min-height:0}.trustSteps time{margin-bottom:16px}}
