@@ -27,6 +27,7 @@ async def make_test_session() -> AsyncIterator:
         session.add(Channel(business_id=1, channel_type="telegram", name="Telegram", is_active=True))
         session.add(Service(business_id=1, name="осмотр кролика", category="прием", description="Осмотр кроликов", is_active=True, requires_doctor_confirmation=True))
         session.add(Service(business_id=1, name="вакцинация", category="профилактика", description="Прививки", is_active=True, requires_doctor_confirmation=True))
+        session.add(Service(business_id=1, name="кастрация кота", category="хирургия", description="Плановая кастрация кота после консультации", is_active=True, requires_doctor_confirmation=True))
         session.add(AnimalType(business_id=1, name="кролик", is_supported=True, comment="Принимаем кроликов"))
         await session.commit()
         yield session

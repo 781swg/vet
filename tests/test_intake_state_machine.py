@@ -116,3 +116,52 @@ def test_multiturn_intake_collects_phone_and_creates_lead(monkeypatch):
             assert animal.name == "Пушок"
 
     asyncio.run(run())
+
+
+def test_service_request_becomes_ready_without_repeating_complaint(monkeypatch):
+    async def noop(*args, **kwargs):
+        return None
+
+    async def run():
+        async with make_test_session() as session:
+            monkeypatch.setattr("app.dialogs.manager.notify_doctor_about_lead", noop)
+            manager = DialogManager(session)
+
+            first = await manager.process_message(
+                UnifiedMessage(
+                    channel="telegram",
+                    external_user_id="301",
+                    external_chat_id="401",
+                    text="кастрация",
+                    display_name="Алексей",
+                )
+            )
+            assert first.lead_id is None
+
+            second = await manager.process_message(
+                UnifiedMessage(
+                    channel="telegram",
+                    external_user_id="301",
+                    external_chat_id="401",
+                    text="кот нужно кастрировать 79513888833",
+                    display_name="Алексей",
+                )
+            )
+            assert second.lead_id is not None
+            assert "заявк" in second.answer.lower()
+            assert "что беспокоит" not in second.answer.lower()
+
+            third = await manager.process_message(
+                UnifiedMessage(
+                    channel="telegram",
+                    external_user_id="301",
+                    external_chat_id="401",
+                    text="лучше звонить вечером",
+                    display_name="Алексей",
+                )
+            )
+            assert third.lead_id == second.lead_id
+            assert "добавил" in third.answer.lower()
+            assert "что беспокоит" not in third.answer.lower()
+
+    asyncio.run(run())

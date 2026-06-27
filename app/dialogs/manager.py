@@ -22,6 +22,23 @@ class DialogProcessResult:
     need_handoff: bool = False
 
 
+READY_STATES = {DialogState.lead_created, DialogState.waiting_for_doctor}
+START_COMMANDS = {"/start", "start"}
+SERVICE_REQUEST_HINTS = ("кастр", "стерилиз", "привив", "вакцин", "запис", "нужн", "хочу")
+PURE_QUESTION_HINTS = ("лечите", "есть ли", "можно", "?")
+
+
+def _service_request_as_complaint(text: str, service: dict | None) -> str | None:
+    if not service:
+        return None
+    lowered = text.lower()
+    if any(hint in lowered for hint in PURE_QUESTION_HINTS) and not any(hint in lowered for hint in SERVICE_REQUEST_HINTS):
+        return None
+    if any(hint in lowered for hint in SERVICE_REQUEST_HINTS):
+        return f"Интересует услуга: {service['name']}"
+    return None
+
+
 class DialogManager:
     def __init__(self, session: AsyncSession, agent: LLMAgent | None = None) -> None:
         self.session = session
@@ -49,6 +66,39 @@ class DialogManager:
             await self.analytics.track(business_id=message.business_id, event_type="contact_created", channel=message.channel, contact_id=contact.id)
         if conversation_created:
             await self.analytics.track(business_id=message.business_id, event_type="conversation_created", channel=message.channel, contact_id=contact.id, conversation_id=conversation.id)
+
+        if conversation.status in READY_STATES and message.text.strip().lower() not in START_COMMANDS:
+            lead = await self.crm.find_latest_lead_for_conversation(conversation.id)
+            if lead:
+                answer = (
+                    f"Спасибо, я добавил это к заявке #{lead.id}. "
+                    "Доктор увидит уточнение в истории диалога. Если есть фото, видео или удобное время для звонка, "
+                    "можете отправить здесь же."
+                )
+                await self.crm.add_message(conversation.id, "bot", answer)
+                await self.analytics.track(
+                    business_id=message.business_id,
+                    event_type="bot_replied",
+                    channel=message.channel,
+                    contact_id=contact.id,
+                    conversation_id=conversation.id,
+                    lead_id=lead.id,
+                )
+                await notify_doctor_about_lead(
+                    self.session,
+                    lead,
+                    f"Клиент добавил уточнение: {message.text}",
+                    None,
+                )
+                await self.analytics.track(
+                    business_id=message.business_id,
+                    event_type="doctor_notified",
+                    channel=message.channel,
+                    contact_id=contact.id,
+                    conversation_id=conversation.id,
+                    lead_id=lead.id,
+                )
+                return DialogProcessResult(answer=answer, lead_id=lead.id, need_handoff=False)
 
         tool_context = await SQLToolbox(self.session).build_context(business_id=message.business_id, query=message.text)
         business_data = tool_context["business"]
@@ -111,6 +161,9 @@ class DialogManager:
             collected_data["phone"] = extracted_data["phone"]
         if extracted_data.get("animal_type") and not collected_data.get("animal_type"):
             collected_data["animal_type"] = extracted_data["animal_type"]
+        service_complaint = _service_request_as_complaint(message.text, service)
+        if service_complaint and not collected_data.get("complaint"):
+            collected_data["complaint"] = service_complaint
         if result.intent.value in {"appointment_request", "animal_problem", "emergency"} and not collected_data.get("complaint"):
             collected_data["complaint"] = message.text
         should_collect_intake = bool(collected_data) and (
@@ -159,8 +212,9 @@ class DialogManager:
                 conversation.status = DialogState.waiting_for_doctor
                 if result.urgency != "emergency":
                     answer = (
-                        "Спасибо, я передал заявку доктору. Если доктор сейчас не отвечает, значит он помогает животному "
-                        "и свяжется с вами, как только освободится."
+                        f"Спасибо, я передал заявку доктору. Номер заявки: #{lead.id}. "
+                        "Он посмотрит данные и свяжется с вами, как только освободится. "
+                        "Если есть фото, видео или удобное время для звонка, можете отправить здесь же."
                     )
             elif form_missing:
                 if "phone" in form_missing:

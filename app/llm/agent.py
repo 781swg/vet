@@ -144,12 +144,15 @@ class LLMAgent:
         if service_found:
             missing = missing_minimal_fields(collected_data)
             database_updates["lead"] = {"interest": service["name"], "priority": "normal"}
+            details_request = (
+                "Напишите, пожалуйста, кто питомец, ваш телефон и коротко цель обращения. "
+                "Например: кот, нужна кастрация, телефон ..."
+            )
             return AgentResult(
                 intent=intent,
                 answer_to_client=(
-                    "Здравствуйте! С вами общается AI-помощник нашего доктора. "
-                    f"Да, по базе я вижу, что услуга доступна: {service['name']}. "
-                    "Чтобы доктор быстрее сориентировался, напишите, пожалуйста, вид питомца, что беспокоит и телефон для связи."
+                    f"Да, такая услуга есть: {service['name']}. "
+                    f"{details_request} Я передам это доктору, чтобы он быстрее сориентировался."
                 ),
                 service_found=True,
                 missing_fields=missing,

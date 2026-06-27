@@ -148,8 +148,14 @@ class CRMRepository:
     async def get_active_intake(self, conversation_id: int) -> IntakeForm | None:
         result = await self.session.execute(
             select(IntakeForm)
-            .where(IntakeForm.conversation_id == conversation_id, IntakeForm.status.in_(["collecting", "ready"]))
+            .where(IntakeForm.conversation_id == conversation_id, IntakeForm.status == "collecting")
             .order_by(desc(IntakeForm.id))
+        )
+        return result.scalars().first()
+
+    async def find_latest_lead_for_conversation(self, conversation_id: int) -> Lead | None:
+        result = await self.session.execute(
+            select(Lead).where(Lead.conversation_id == conversation_id).order_by(desc(Lead.id))
         )
         return result.scalars().first()
 
